@@ -4,7 +4,7 @@ This project is a multi-provider AI chat application built with Spring Boot and 
 It includes:
 - REST APIs for basic chat and conversational chat
 - Streaming chat (SSE)
-- Prompt-based code review API
+- Prompt-based code review and ticket analysis APIs
 - Browser UIs for streaming chat and code review
 
 ## Tech Stack
@@ -77,7 +77,7 @@ Explain dependency injection in Spring Boot.
 ```
 - Expected response: plain text AI answer
 
-Postman cURL preview equivalent:
+cURL:
 ```bash
 curl -X POST "http://localhost:8080/chatclient/chat" \
   -H "Content-Type: text/plain" \
@@ -114,6 +114,77 @@ Behavior:
 - If `conversationId` is absent, backend creates one.
 - If present, backend uses recent conversation history.
 
+### C) StreamingChatModelController
+Controller path: `/chatmodel/streaming`
+
+#### Endpoint: `POST /chatmodel/streaming/chat`
+- URL: `http://localhost:8080/chatmodel/streaming/chat`
+- Headers:
+  - `Content-Type: text/plain`
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+- Body type: `raw` -> `Text`
+- Response: `text/event-stream`
+
+#### Endpoint: `POST /chatmodel/streaming/chat/conversation`
+- URL (new conversation): `http://localhost:8080/chatmodel/streaming/chat/conversation`
+- URL (existing conversation): `http://localhost:8080/chatmodel/streaming/chat/conversation?conversationId=1001`
+- Headers:
+  - `Content-Type: text/plain`
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+- Body type: `raw` -> `Text`
+- Response: `text/event-stream`
+
+### D) PromptController
+Controller path: `/prompts`
+
+#### Endpoint: `POST /prompts/analyze-code`
+- URL: `http://localhost:8080/prompts/analyze-code`
+- Headers:
+  - `Content-Type: application/json`
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+- Body type: `raw` -> `JSON`
+- Example payload:
+```json
+{
+  "code": "public class User { ... }",
+  "language": "Java",
+  "businessRequirements": "Validate password strength"
+}
+```
+- Expected response: plain text code review
+
+cURL:
+```bash
+curl -X POST "http://localhost:8080/prompts/analyze-code" \
+  -H "Content-Type: application/json" \
+  -H "ai-provider: ollama" \
+  -d '{
+    "language": "Java",
+    "code": "public class User { private String password; public String getPassword(){ return password; } }",
+    "businessRequirements": "Password must be at least 8 characters and include one special character"
+  }'
+```
+
+#### Endpoint: `POST /prompts/analyze-ticket`
+- URL: `http://localhost:8080/prompts/analyze-ticket`
+- Headers:
+  - `Content-Type: text/plain`
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+- Body type: `raw` -> `Text`
+- Example body:
+```text
+Customer reports checkout failure with payment timeout after entering card details.
+```
+- Expected response: JSON mapped to `TicketAnalysis`
+
+cURL:
+```bash
+curl -X POST "http://localhost:8080/prompts/analyze-ticket" \
+  -H "Content-Type: text/plain" \
+  -H "ai-provider: ollama" \
+  --data "Customer reports checkout failure with payment timeout after entering card details."
+```
+
 ## 4) UI Usage
 
 ### A) `index.html` (StreamingChatModelController)
@@ -147,7 +218,7 @@ How to use:
 5. Click `Review Code`.
 
 Backend endpoint used by this UI:
-- `POST /prompts/chat`
+- `POST /prompts/analyze-code`
 
 Request payload sent by UI:
 ```json
@@ -184,7 +255,7 @@ Copy the JSON below into a file like `ai-chat-bot.postman_collection.json`, then
   "info": {
     "name": "AI Chat Bot API",
     "_postman_id": "8d1d29d4-6df4-4c7d-81e7-f7f0d4c6cf12",
-    "description": "Sample requests for BasicChatController, ChatModelController, StreamingChatModelController, and PromptController.",
+    "description": "Sample requests for BasicChatController, ChatModelController, StreamingChatModelController, and PromptController (code and ticket analysis).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -358,7 +429,45 @@ Copy the JSON below into a file like `ai-chat-bot.postman_collection.json`, then
       }
     },
     {
-      "name": "PromptController - Code Review",
+      "name": "StreamingChatModelController - Streaming Conversation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          },
+          {
+            "key": "ai-provider",
+            "value": "{{provider}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "Continue with more details about SSE tradeoffs."
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chatmodel/streaming/chat/conversation?conversationId={{conversationId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "chatmodel",
+            "streaming",
+            "chat",
+            "conversation"
+          ],
+          "query": [
+            {
+              "key": "conversationId",
+              "value": "{{conversationId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "PromptController - Analyze Code",
       "request": {
         "method": "POST",
         "header": [
@@ -376,13 +485,43 @@ Copy the JSON below into a file like `ai-chat-bot.postman_collection.json`, then
           "raw": "{\n  \"language\": \"Java\",\n  \"code\": \"public class User { private String password; public String getPassword(){ return password; } }\",\n  \"businessRequirements\": \"Password must be at least 8 characters and include one special character\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/prompts/chat",
+          "raw": "{{baseUrl}}/prompts/analyze-code",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "prompts",
-            "chat"
+            "analyze-code"
+          ]
+        }
+      }
+    },
+    {
+      "name": "PromptController - Analyze Ticket",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          },
+          {
+            "key": "ai-provider",
+            "value": "{{provider}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "Customer reports checkout failure with payment timeout after entering card details."
+        },
+        "url": {
+          "raw": "{{baseUrl}}/prompts/analyze-ticket",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "prompts",
+            "analyze-ticket"
           ]
         }
       }

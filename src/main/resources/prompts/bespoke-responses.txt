@@ -27,5 +27,5 @@ CRITICAL SITUATION DETECTED!
         - tone: one of "immediate", "empathetic", "compensation"
         - responseText: The complete response text (2-3 sentences maximum)
 
-        IMPORTANT: Return as a JSON array of exactly 2 response objects
+        IMPORTANT: Return as a JSON array of exactly 2 response objects. No explanations, no markdown, just JSON.
         Make responses SHORT and ACTIONABLE - agent needs to send immediately!

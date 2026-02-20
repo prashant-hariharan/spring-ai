@@ -1,5 +1,10 @@
 # In application.yml
 ---
+app:
+  ai:
+    llm-logging:
+      enabled: true
+
 spring:
   application:
     name: ai-chat-bot

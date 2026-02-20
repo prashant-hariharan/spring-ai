@@ -3,6 +3,7 @@ package com.prashant.ai_chat_bot.config;
 import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.PromptReaderUtil;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -11,12 +12,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Configuration
@@ -24,6 +21,8 @@ import java.util.Optional;
 public class MultiModelConfig {
 
   private final ResourceLoader resourceLoader;
+  @Value("${app.ai.llm-logging.enabled:false}")
+  private boolean llmLoggingEnabled;
 
   public MultiModelConfig(ResourceLoader resourceLoader) {
     this.resourceLoader = resourceLoader;
@@ -35,7 +34,7 @@ public class MultiModelConfig {
   public ChatClient openAIChatClient(OpenAiChatModel openAiChatModel,
       @Value("${spring.ai.openai.chat.options.max-tokens:0}") Integer openAiMaxTokens) {
     String systemPrompt = loadSystemPrompt("classpath:prompts/openai-system.txt", openAiMaxTokens);
-    return ChatClient.builder(openAiChatModel)
+    return applyLoggingAdvisor(ChatClient.builder(openAiChatModel))
         .defaultSystem(systemPrompt)
         .build();
   }
@@ -45,7 +44,9 @@ public class MultiModelConfig {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GEMINI);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/gemini-system.txt", maxTokens);
-    return ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GEMINI))
+    return applyLoggingAdvisor(
+        ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GEMINI))
+      )
         .defaultSystem(systemPrompt)
         .build();
   }
@@ -55,7 +56,9 @@ public class MultiModelConfig {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.OLLAMA);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/ollama-system.txt", maxTokens);
-    return ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.OLLAMA))
+    return applyLoggingAdvisor(
+        ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.OLLAMA))
+      )
         .defaultSystem(systemPrompt)
         .build();
   }
@@ -65,7 +68,9 @@ public class MultiModelConfig {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GROQ);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/groq-system.txt", maxTokens);
-    return ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GROQ))
+    return applyLoggingAdvisor(
+        ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GROQ))
+      )
       .defaultSystem(systemPrompt)
       .build();
   }
@@ -115,5 +120,12 @@ public class MultiModelConfig {
       prompt = prompt.replace("${MAX_TOKENS}", maxTokens.toString());
     }
     return prompt;
+  }
+
+  private ChatClient.Builder applyLoggingAdvisor(ChatClient.Builder builder) {
+    if (llmLoggingEnabled) {
+      return builder.defaultAdvisors(new SimpleLoggerAdvisor());
+    }
+    return builder;
   }
 }

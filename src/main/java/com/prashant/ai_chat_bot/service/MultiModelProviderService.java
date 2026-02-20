@@ -1,5 +1,6 @@
 package com.prashant.ai_chat_bot.service;
 
+import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +21,12 @@ public class MultiModelProviderService {
   public ChatClient getChatClient(String aiProvider) {
     String provider = StringUtils.hasText(aiProvider)
       ? aiProvider
-      : "ollama";
+      : AIProviderConstants.OLLAMA;
 
-    ChatClient client = chatClients.getOrDefault(provider, chatClients.get("ollama"));
+    ChatClient client = chatClients.getOrDefault(
+      provider,
+      chatClients.get(AIProviderConstants.OLLAMA)
+    );
 
     log.info("Chat client selected for provider: {}", provider);
 

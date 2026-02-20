@@ -1,0 +1,14 @@
+package com.prashant.ai_chat_bot.utils;
+
+public final class AIProviderConstants {
+
+  public static final String OPENAI = "openai";
+  public static final String GEMINI = "gemini";
+  public static final String OLLAMA = "ollama";
+  public static final String GROQ = "groq";
+
+  public static final String AI_PROVIDER_HEADER = "ai-provider";
+
+  private AIProviderConstants() {
+  }
+}

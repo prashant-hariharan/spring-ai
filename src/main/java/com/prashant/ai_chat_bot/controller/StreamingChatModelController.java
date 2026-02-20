@@ -2,6 +2,7 @@ package com.prashant.ai_chat_bot.controller;
 
 import com.prashant.ai_chat_bot.service.ConversationService;
 import com.prashant.ai_chat_bot.service.MultiModelProviderService;
+import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.InputSanitizer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +31,9 @@ public class StreamingChatModelController {
     //text/event-stream: this is a SSE (Server Sent events) endpoint. Spring boot handles streaming internally
     @PostMapping(value= "/chat", produces = "text/event-stream")
     public Flux<String> chat(
-      @RequestHeader(value = "ai-provider", required = false) String aiProvider,
+      @RequestHeader(value = AIProviderConstants.AI_PROVIDER_HEADER, required = false) String aiProvider,
       @RequestBody String messageInput) {
-        String resolvedProvider = aiProvider == null ? "ollama" : aiProvider;
+        String resolvedProvider = aiProvider == null ? AIProviderConstants.OLLAMA : aiProvider;
         String resolvedMessage = messageInput == null ? "" : messageInput;
 
         return multiModelProviderService.getChatClient(resolvedProvider)
@@ -48,7 +49,7 @@ public class StreamingChatModelController {
     )
     public Flux<String> chat(
       @RequestParam(value = "conversationId", required = false) Integer conversationId,
-      @RequestHeader(value = "ai-provider", required = false, defaultValue = "ollama") String aiProvider,
+      @RequestHeader(value = AIProviderConstants.AI_PROVIDER_HEADER, required = false, defaultValue = AIProviderConstants.OLLAMA) String aiProvider,
       @RequestBody String messageInput) {
 
         return Flux.defer(() -> {

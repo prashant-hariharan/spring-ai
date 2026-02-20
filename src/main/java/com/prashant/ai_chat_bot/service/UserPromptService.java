@@ -5,13 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Service
@@ -44,4 +40,15 @@ public class UserPromptService {
         return promptTemplate.create(substitutionVariables);
 
     }
+
+  public Prompt createBespokeResponsePrompt(String category, String keyIssues) {
+    String prompt = PromptReaderUtil.getPrompt(resourceLoader,"classpath:/prompts/bespoke-responses.txt");
+    PromptTemplate promptTemplate = new PromptTemplate(prompt);
+    Map<String,Object> substitutionVariables = Map.of(
+      "category",category,
+      "issues",keyIssues
+    );
+    return promptTemplate.create(substitutionVariables);
+
+  }
 }

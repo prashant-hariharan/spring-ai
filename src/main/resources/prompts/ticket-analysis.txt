@@ -11,5 +11,6 @@ Please provide the analysis in the following format:
 4. summary: A concise 1-2 sentence summary of the issue.
 5. suggestedResolution: Recommended steps for the support agent to take.
 6. estimatedResolutionTime: How long will it take to resolve the issue approximately(in hours)
+7. keyIssues: Comma-separated list of key problems mentioned
 
 IMPORTANT: Return the response as a valid JSON object matching the structure above.

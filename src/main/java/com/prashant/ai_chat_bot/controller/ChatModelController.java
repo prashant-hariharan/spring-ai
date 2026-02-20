@@ -2,6 +2,7 @@ package com.prashant.ai_chat_bot.controller;
 
 import com.prashant.ai_chat_bot.service.ConversationService;
 import com.prashant.ai_chat_bot.service.MultiModelProviderService;
+import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.InputSanitizer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class ChatModelController {
     private final ConversationService conversationService;
 
     @PostMapping("/chat")
-    public String chat(@RequestHeader(value="ai-provider", required = false,defaultValue = "ollama") String aiProvider,
+    public String chat(@RequestHeader(value= AIProviderConstants.AI_PROVIDER_HEADER, required = false,defaultValue = AIProviderConstants.OLLAMA) String aiProvider,
       @RequestBody String messageInput) {
         messageInput = InputSanitizer.sanitize(messageInput);
         return multiModelProviderService.getChatClient(aiProvider)
@@ -37,7 +38,7 @@ public class ChatModelController {
     @PostMapping("/chat/conversation")
     public ResponseEntity<String> chat(
       @RequestParam(value = "conversationId", required = false) Integer conversationId,
-      @RequestHeader(value="ai-provider", required = false,defaultValue = "ollama") String aiProvider,
+      @RequestHeader(value= AIProviderConstants.AI_PROVIDER_HEADER, required = false,defaultValue = AIProviderConstants.OLLAMA) String aiProvider,
       @RequestBody String messageInput) {
         try {
             messageInput = InputSanitizer.sanitize(messageInput);

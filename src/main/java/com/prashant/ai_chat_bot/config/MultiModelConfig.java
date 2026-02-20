@@ -1,5 +1,6 @@
 package com.prashant.ai_chat_bot.config;
 
+import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.PromptReaderUtil;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatModel;
@@ -29,7 +30,7 @@ public class MultiModelConfig {
   }
 
 
-  @Bean("openai")
+  @Bean(AIProviderConstants.OPENAI)
   @Primary
   public ChatClient openAIChatClient(OpenAiChatModel openAiChatModel,
       @Value("${spring.ai.openai.chat.options.max-tokens:0}") Integer openAiMaxTokens) {
@@ -39,32 +40,32 @@ public class MultiModelConfig {
         .build();
   }
 
-  @Bean("gemini")
+  @Bean(AIProviderConstants.GEMINI)
   public ChatClient geminiChatClient(AIProviderProperties properties) {
-    AIProviderProperties.Provider provider = requireProvider(properties, "gemini");
+    AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GEMINI);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/gemini-system.txt", maxTokens);
-    return ChatClient.builder(createOpenAiCompatibleModel(properties, "gemini"))
+    return ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GEMINI))
         .defaultSystem(systemPrompt)
         .build();
   }
 
-  @Bean("ollama")
+  @Bean(AIProviderConstants.OLLAMA)
   public ChatClient ollamaChatClient(AIProviderProperties properties) {
-    AIProviderProperties.Provider provider = requireProvider(properties, "ollama");
+    AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.OLLAMA);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/ollama-system.txt", maxTokens);
-    return ChatClient.builder(createOpenAiCompatibleModel(properties, "ollama"))
+    return ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.OLLAMA))
         .defaultSystem(systemPrompt)
         .build();
   }
 
-  @Bean("groq")
+  @Bean(AIProviderConstants.GROQ)
   public ChatClient groqChatClient(AIProviderProperties properties) {
-    AIProviderProperties.Provider provider = requireProvider(properties, "groq");
+    AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GROQ);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/groq-system.txt", maxTokens);
-    return ChatClient.builder(createOpenAiCompatibleModel(properties, "groq"))
+    return ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GROQ))
       .defaultSystem(systemPrompt)
       .build();
   }

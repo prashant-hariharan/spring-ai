@@ -64,7 +64,7 @@ public class PromptController {
         .user(bespokeResponsePrompt.getContents())
         .call()
         .entity(new ParameterizedTypeReference<List<BespokeResponse>>() {});
-      
+
         if(!CollectionUtils.isEmpty(bespokeResponses)){
           response.setBespokeResponses(bespokeResponses);
         }

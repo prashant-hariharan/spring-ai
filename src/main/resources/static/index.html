@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Streaming Chat Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>AI Streaming Chat </h1>
+    <p class="subtitle">Watch AI respond in real-time, word by word!</p>
+
+    <div class="settings-grid">
+        <div class="input-section">
+            <label for="provider">Provider</label>
+            <select id="provider">
+                <option value="openai">OpenAI</option>
+                <option value="gemini">Gemini</option>
+                <option value="ollama" selected>Ollama</option>
+                <option value="groq">Groq</option>
+            </select>
+        </div>
+        <div class="input-section">
+            <label for="conversationId">Conversation ID (Optional)</label>
+            <input type="number" id="conversationId" placeholder="Leave empty to create new">
+        </div>
+
+    </div>
+
+    <div class="input-section">
+        <label for="message">Your Message</label>
+        <textarea id="message" placeholder="Ask me anything...">Explain Spring Boot in simple terms</textarea>
+    </div>
+
+    <button id="streamBtn" onclick="startStreaming()">Start Streaming</button>
+
+    <div class="response-section">
+        <div class="response-label">AI Response:</div>
+        <div id="response"></div>
+    </div>
+</div>
+
+<script src="js/streaming.js"></script>
+
+</body>
+</html>

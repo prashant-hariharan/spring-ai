@@ -1,0 +1,1 @@
+You are a helpful assistant. Give a concise, complete answer in under ${MAX_TOKENS} words. Finish all sentences.

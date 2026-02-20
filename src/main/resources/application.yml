@@ -1,0 +1,36 @@
+# In application.yml
+---
+spring:
+  application:
+    name: ai-chat-bot
+  ai:
+    openai:
+      api-key: ${OPEN_API_KEY}
+      chat:
+        enabled: true
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+          max-tokens: 500
+    providers:
+      gemini:
+        api-key: ${GEMINI_API_KEY}
+        model: gemini-2.5-flash
+        temperature: 0.7
+        max-tokens: 750
+        base-url: https://generativelanguage.googleapis.com/v1beta
+        completion-path: /openai/chat/completions
+      groq:
+        api-key: ${GROQ_API_KEY:}
+        model: llama-3.1-8b-instant
+        temperature: 0.7
+        max-tokens: 500
+        base-url: https://api.groq.com/openai/v1
+        completion-path: /chat/completions
+      ollama:
+        api-key: ${OLLAMA_API_KEY:}
+        model: llama3.2:3b
+        temperature: 0.7
+        max-tokens: 500
+        base-url: http://localhost:11434/v1
+        completion-path: /chat/completions

@@ -90,153 +90,25 @@ From the project root:
 Default app URL:
 - `http://localhost:8080`
 
-## 3) API Testing in Postman
+## 3) API Quick Reference
+Use this section for fast lookup. For runnable requests, import the Postman collection in Section 6.
 
-### A) BasicChatController
-Controller path: `/chatclient`
+Common provider header values:
+- `ai-provider: openai | gemini | ollama | groq | cohere | mistral`
 
-#### Endpoint: `POST /chatclient/chat`
-- URL: `http://localhost:8080/chatclient/chat`
-- Body type: `raw` -> `Text`
-- Example body:
-```text
-Explain dependency injection in Spring Boot.
-```
-- Expected response: plain text AI answer
+| Controller | Endpoint | Content-Type | Body | Response | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `BasicChatController` | `POST /chatclient/chat` | `text/plain` | plain text message | plain text | No `ai-provider` header required. |
+| `ChatModelController` | `POST /chatmodel/chat` | `text/plain` | plain text message | plain text | Uses selected provider from header. |
+| `ChatModelController` | `POST /chatmodel/chat/conversation` | `text/plain` | plain text message | plain text | Optional query param: `conversationId=1001`. |
+| `StreamingChatModelController` | `POST /chatmodel/streaming/chat` | `text/plain` | plain text message | `text/event-stream` | Streaming response (SSE). |
+| `StreamingChatModelController` | `POST /chatmodel/streaming/chat/conversation` | `text/plain` | plain text message | `text/event-stream` | Optional query param: `conversationId=1001`. |
+| `PromptController` | `POST /prompts/analyze-code` | `application/json` | `CodeReviewDTO` JSON | plain text | Request fields: `language`, `code`, `businessRequirements` (optional). |
+| `PromptController` | `POST /prompts/analyze-ticket` | `text/plain` | ticket description text | `TicketAnalysisResponse` JSON | Returns `ticketAnalysis` + optional `bespokeResponses` when priority is `HIGH`/`URGENT`. |
 
-cURL:
-```bash
-curl -X POST "http://localhost:8080/chatclient/chat" \
-  -H "Content-Type: text/plain" \
-  --data "Explain dependency injection in Spring Boot."
-```
-
-### B) ChatModelController
-Controller path: `/chatmodel`
-
-#### Endpoint: `POST /chatmodel/chat`
-- URL: `http://localhost:8080/chatmodel/chat`
-- Headers:
-  - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
-- Body type: `raw` -> `Text`
-- Example body:
-```text
-Give me 3 tips to optimize Java code readability.
-```
-
-#### Endpoint: `POST /chatmodel/chat/conversation`
-- URL (new conversation): `http://localhost:8080/chatmodel/chat/conversation`
-- URL (existing conversation): `http://localhost:8080/chatmodel/chat/conversation?conversationId=1001`
-- Headers:
-  - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
-- Body type: `raw` -> `Text`
-- Example body:
-```text
-Continue from previous answer and provide sample code.
-```
-
-Behavior:
-- If `conversationId` is absent, backend creates one.
-- If present, backend uses recent conversation history.
-
-### C) StreamingChatModelController
-Controller path: `/chatmodel/streaming`
-
-#### Endpoint: `POST /chatmodel/streaming/chat`
-- URL: `http://localhost:8080/chatmodel/streaming/chat`
-- Headers:
-  - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
-- Body type: `raw` -> `Text`
-- Response: `text/event-stream`
-
-#### Endpoint: `POST /chatmodel/streaming/chat/conversation`
-- URL (new conversation): `http://localhost:8080/chatmodel/streaming/chat/conversation`
-- URL (existing conversation): `http://localhost:8080/chatmodel/streaming/chat/conversation?conversationId=1001`
-- Headers:
-  - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
-- Body type: `raw` -> `Text`
-- Response: `text/event-stream`
-
-### D) PromptController
-Controller path: `/prompts`
-
-#### Endpoint: `POST /prompts/analyze-code`
-- URL: `http://localhost:8080/prompts/analyze-code`
-- Headers:
-  - `Content-Type: application/json`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
-- Body type: `raw` -> `JSON`
-- Example payload:
-```json
-{
-  "code": "public class User { ... }",
-  "language": "Java",
-  "businessRequirements": "Validate password strength"
-}
-```
-- Expected response: plain text code review
-
-cURL:
-```bash
-curl -X POST "http://localhost:8080/prompts/analyze-code" \
-  -H "Content-Type: application/json" \
-  -H "ai-provider: ollama" \
-  -d '{
-    "language": "Java",
-    "code": "public class User { private String password; public String getPassword(){ return password; } }",
-    "businessRequirements": "Password must be at least 8 characters and include one special character"
-  }'
-```
-
-#### Endpoint: `POST /prompts/analyze-ticket`
-- URL: `http://localhost:8080/prompts/analyze-ticket`
-- Headers:
-  - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
-- Body type: `raw` -> `Text`
-- Example body:
-```text
-Customer reports checkout failure with payment timeout after entering card details.
-```
-- Urgent-trigger example body (should typically produce `priority: URGENT` and include `bespokeResponses`):
-```text
-P0 INCIDENT: All customers are unable to complete checkout globally for the last 30 minutes. Revenue impact is critical, payment attempts are failing with timeout errors, and support volume is spiking. Immediate rollback/escalation required.
-```
-- Expected response: JSON mapped to `TicketAnalysisResponse` (contains `ticketAnalysis` and optional `bespokeResponses`)
-
-Example response shape:
-```json
-{
-  "ticketAnalysis": {
-    "category": "PAYMENT",
-    "priority": "HIGH",
-    "keyIssues": [
-      "Payment timeout during checkout"
-    ],
-    "suggestedActions": [
-      "Review payment gateway timeout and retry logic"
-    ]
-  },
-  "bespokeResponses": [
-    {
-      "team": "Support",
-      "action": "Acknowledge incident and collect impacted order IDs"
-    }
-  ]
-}
-```
-
-cURL:
-```bash
-curl -X POST "http://localhost:8080/prompts/analyze-ticket" \
-  -H "Content-Type: text/plain" \
-  -H "ai-provider: ollama" \
-  --data "Customer reports checkout failure with payment timeout after entering card details."
-```
+`/prompts/analyze-ticket` example bodies:
+- Normal case: `Customer reports checkout failure with payment timeout after entering card details.`
+- Urgent trigger case: `P0 INCIDENT: All customers are unable to complete checkout globally for the last 30 minutes. Revenue impact is critical, payment attempts are failing with timeout errors, and support volume is spiking. Immediate rollback/escalation required.`
 
 ## 4) UI Usage
 
@@ -291,16 +163,7 @@ Header sent by UI:
 - Ollama errors: ensure local Ollama is running and model is available.
 - UI not loading: verify app is running on `http://localhost:8080`.
 
-## 6) Project Structure (Key Files)
-- `src/main/java/com/prashant/ai_chat_bot/controller/BasicChatController.java`
-- `src/main/java/com/prashant/ai_chat_bot/controller/ChatModelController.java`
-- `src/main/java/com/prashant/ai_chat_bot/controller/StreamingChatModelController.java`
-- `src/main/java/com/prashant/ai_chat_bot/controller/PromptController.java`
-- `src/main/resources/application.yml`
-- `src/main/resources/static/index.html`
-- `src/main/resources/static/code-review.html`
-
-## 7) Sample Postman Collection (Import JSON)
+## 6) Sample Postman Collection (Import JSON)
 Copy the JSON below into a file like `ai-chat-bot.postman_collection.json`, then import it in Postman.
 
 ```json
@@ -578,14 +441,44 @@ Copy the JSON below into a file like `ai-chat-bot.postman_collection.json`, then
           ]
         }
       }
+    },
+    {
+      "name": "PromptController - Analyze Ticket (Urgent P0)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          },
+          {
+            "key": "ai-provider",
+            "value": "{{provider}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "P0 INCIDENT: All customers are unable to complete checkout globally for the last 30 minutes. Revenue impact is critical, payment attempts are failing with timeout errors, and support volume is spiking. Immediate rollback/escalation required."
+        },
+        "url": {
+          "raw": "{{baseUrl}}/prompts/analyze-ticket",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "prompts",
+            "analyze-ticket"
+          ]
+        }
+      }
     }
   ]
 }
 ```
 
-## 8) References
+## 7) References
 - Spring AI: https://spring.io/projects/spring-ai
 
-## 9) Credits
+## 8) Credits
 - Thanks to HungryCoders for the learning content and guidance:
   https://www.hungrycoders.com/course/ai-for-java-spring-boot-backend-engineers

@@ -202,7 +202,33 @@ curl -X POST "http://localhost:8080/prompts/analyze-code" \
 ```text
 Customer reports checkout failure with payment timeout after entering card details.
 ```
-- Expected response: JSON mapped to `TicketAnalysis`
+- Urgent-trigger example body (should typically produce `priority: URGENT` and include `bespokeResponses`):
+```text
+P0 INCIDENT: All customers are unable to complete checkout globally for the last 30 minutes. Revenue impact is critical, payment attempts are failing with timeout errors, and support volume is spiking. Immediate rollback/escalation required.
+```
+- Expected response: JSON mapped to `TicketAnalysisResponse` (contains `ticketAnalysis` and optional `bespokeResponses`)
+
+Example response shape:
+```json
+{
+  "ticketAnalysis": {
+    "category": "PAYMENT",
+    "priority": "HIGH",
+    "keyIssues": [
+      "Payment timeout during checkout"
+    ],
+    "suggestedActions": [
+      "Review payment gateway timeout and retry logic"
+    ]
+  },
+  "bespokeResponses": [
+    {
+      "team": "Support",
+      "action": "Acknowledge incident and collect impacted order IDs"
+    }
+  ]
+}
+```
 
 cURL:
 ```bash

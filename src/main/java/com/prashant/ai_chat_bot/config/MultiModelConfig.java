@@ -33,7 +33,7 @@ public class MultiModelConfig {
   @Primary
   public ChatClient openAIChatClient(OpenAiChatModel openAiChatModel,
       @Value("${spring.ai.openai.chat.options.max-tokens:0}") Integer openAiMaxTokens) {
-    String systemPrompt = loadSystemPrompt("classpath:prompts/openai-system.txt", openAiMaxTokens);
+    String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/openai-system.txt", openAiMaxTokens);
     return applyLoggingAdvisor(ChatClient.builder(openAiChatModel))
         .defaultSystem(systemPrompt)
         .build();
@@ -43,7 +43,7 @@ public class MultiModelConfig {
   public ChatClient geminiChatClient(AIProviderProperties properties) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GEMINI);
     Integer maxTokens = provider.getMaxTokens();
-    String systemPrompt = loadSystemPrompt("classpath:prompts/gemini-system.txt", maxTokens);
+    String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/gemini-system.txt", maxTokens);
     return applyLoggingAdvisor(
         ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GEMINI))
       )
@@ -55,7 +55,7 @@ public class MultiModelConfig {
   public ChatClient ollamaChatClient(AIProviderProperties properties) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.OLLAMA);
     Integer maxTokens = provider.getMaxTokens();
-    String systemPrompt = loadSystemPrompt("classpath:prompts/ollama-system.txt", maxTokens);
+    String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/ollama-system.txt", maxTokens);
     return applyLoggingAdvisor(
         ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.OLLAMA))
       )
@@ -67,10 +67,22 @@ public class MultiModelConfig {
   public ChatClient groqChatClient(AIProviderProperties properties) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GROQ);
     Integer maxTokens = provider.getMaxTokens();
-    String systemPrompt = loadSystemPrompt("classpath:prompts/groq-system.txt", maxTokens);
+    String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/groq-system.txt", maxTokens);
     return applyLoggingAdvisor(
         ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GROQ))
       )
+      .defaultSystem(systemPrompt)
+      .build();
+  }
+
+  @Bean(AIProviderConstants.COHERE)
+  public ChatClient deepseekChatClient(AIProviderProperties properties) {
+    AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.COHERE);
+    Integer maxTokens = provider.getMaxTokens();
+    String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/cohere-system.txt", maxTokens);
+    return applyLoggingAdvisor(
+      ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.COHERE))
+    )
       .defaultSystem(systemPrompt)
       .build();
   }

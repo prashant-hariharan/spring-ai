@@ -15,7 +15,7 @@ It includes:
 
 ## Prerequisites
 - JDK 17 installed
-- Internet access for cloud providers (OpenAI/Gemini/Groq)
+- Internet access for cloud providers (OpenAI/Gemini/Groq/Cohere)
 - Optional: Ollama running locally if you use provider `ollama`
 
 ## 1) Setup Environment Variables
@@ -25,6 +25,7 @@ Required/optional variables:
 - `OPEN_API_KEY` (required if using OpenAI)
 - `GEMINI_API_KEY` (required if using Gemini)
 - `GROQ_API_KEY` (required if using Groq)
+- `COHERE_API_KEY` (required if using Cohere)
 - `OLLAMA_API_KEY` (optional, blank by default)
 
 ### Windows PowerShell (current terminal session)
@@ -32,6 +33,7 @@ Required/optional variables:
 $env:OPEN_API_KEY="your-openai-key"
 $env:GEMINI_API_KEY="your-gemini-key"
 $env:GROQ_API_KEY="your-groq-key"
+$env:COHERE_API_KEY="your-cohere-key"
 $env:OLLAMA_API_KEY=""
 ```
 
@@ -40,7 +42,22 @@ $env:OLLAMA_API_KEY=""
 export OPEN_API_KEY="your-openai-key"
 export GEMINI_API_KEY="your-gemini-key"
 export GROQ_API_KEY="your-groq-key"
+export COHERE_API_KEY="your-cohere-key"
 export OLLAMA_API_KEY=""
+```
+
+Sample Cohere provider entry in `application.yml`:
+```yaml
+spring:
+  ai:
+    providers:
+      cohere:
+        api-key: ${COHERE_API_KEY:}
+        model: command-r
+        temperature: 0.7
+        max-tokens: 500
+        base-url: https://api.cohere.ai/compatibility/v1
+        completion-path: /chat/completions
 ```
 
 Notes:
@@ -91,7 +108,7 @@ Controller path: `/chatmodel`
 - URL: `http://localhost:8080/chatmodel/chat`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
 - Body type: `raw` -> `Text`
 - Example body:
 ```text
@@ -103,7 +120,7 @@ Give me 3 tips to optimize Java code readability.
 - URL (existing conversation): `http://localhost:8080/chatmodel/chat/conversation?conversationId=1001`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
 - Body type: `raw` -> `Text`
 - Example body:
 ```text
@@ -121,7 +138,7 @@ Controller path: `/chatmodel/streaming`
 - URL: `http://localhost:8080/chatmodel/streaming/chat`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
 - Body type: `raw` -> `Text`
 - Response: `text/event-stream`
 
@@ -130,7 +147,7 @@ Controller path: `/chatmodel/streaming`
 - URL (existing conversation): `http://localhost:8080/chatmodel/streaming/chat/conversation?conversationId=1001`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
 - Body type: `raw` -> `Text`
 - Response: `text/event-stream`
 
@@ -141,7 +158,7 @@ Controller path: `/prompts`
 - URL: `http://localhost:8080/prompts/analyze-code`
 - Headers:
   - `Content-Type: application/json`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
 - Body type: `raw` -> `JSON`
 - Example payload:
 ```json
@@ -169,7 +186,7 @@ curl -X POST "http://localhost:8080/prompts/analyze-code" \
 - URL: `http://localhost:8080/prompts/analyze-ticket`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
 - Body type: `raw` -> `Text`
 - Example body:
 ```text

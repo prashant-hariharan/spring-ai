@@ -12,9 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service for managing conversation history and state.
- *
  * KEY CONCEPT: Conversation Memory Management
- *
+
  * LLMs are STATELESS - they don't remember previous messages in a conversation.
  * This service acts as the "memory" layer, storing conversation history so we
  * can replay it with each new AI request.
@@ -57,7 +56,7 @@ public class ConversationService {
   public ConversationHistory getConversation(Integer conversationId) {
     return conversations.computeIfAbsent(
       conversationId,
-      id -> new ConversationHistory(id)  // Lambda: only called if key missing
+      ConversationHistory::new
     );
   }
 
@@ -146,15 +145,9 @@ public class ConversationService {
   }
 
 
-  public void clearConversation(Integer conversationId) {
-    conversations.remove(conversationId);
-  }
-
-
-
   //find recent conversation id
   public Integer generateConversationId() {
-    if (conversations == null || conversations.isEmpty()) {
+    if (conversations.isEmpty()) {
       return 1;
     }
 

@@ -8,7 +8,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.model.ModelResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +25,7 @@ import java.util.Optional;
 @Slf4j
 public class ChatModelController {
 
+    public static final String AI_PROCESSING_FAILED = "AI processing failed";
     private final MultiModelProviderService multiModelProviderService;
     private final ConversationService conversationService;
 
@@ -62,7 +67,7 @@ public class ChatModelController {
 
             String content = Optional.ofNullable(chatResponse)
               .map(ChatResponse::getResult)
-              .map(result -> result.getOutput())
+              .map(ModelResult::getOutput)
               .map(Object::toString)
               .filter(s -> !s.isBlank())
               .orElseThrow(() ->
@@ -72,8 +77,8 @@ public class ChatModelController {
 
             int totalTokenCount = Optional.ofNullable(chatResponse)
               .map(ChatResponse::getMetadata)
-              .map(metadata -> metadata.getUsage())
-              .map(usage -> usage.getTotalTokens())
+              .map(ChatResponseMetadata::getUsage)
+              .map(Usage::getTotalTokens)
               .orElse(0);
 
             int totalConsumedTokenInConversation = conversationService.updateTotalTokenCount(conversationId,totalTokenCount);
@@ -84,19 +89,19 @@ public class ChatModelController {
 
             return ResponseEntity.ok(content);
         } catch (IllegalArgumentException e) {
-            log.error("AI processing failed", e);
+            log.error(AI_PROCESSING_FAILED, e);
             return generateErrorResponse();
         }
         catch (Exception e) {
-            log.error("AI processing failed", e);
+            log.error(AI_PROCESSING_FAILED, e);
             return generateErrorResponse();
         }
 
     }
 
-    private ResponseEntity generateErrorResponse(){
+    private ResponseEntity<String> generateErrorResponse(){
         return ResponseEntity.internalServerError()
-          .body("AI processing failed");
+          .body(AI_PROCESSING_FAILED);
     }
 
 

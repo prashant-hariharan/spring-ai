@@ -10,6 +10,9 @@ public class TokenCounter {
   private static final Encoding encoding = registry.getEncoding("cl100k_base")
     .orElseThrow(() -> new IllegalStateException("Encoding not found"));
 
+  private TokenCounter() {}
+
+
   public static int countTokens(String text) {
     return encoding.countTokens(text);
   }

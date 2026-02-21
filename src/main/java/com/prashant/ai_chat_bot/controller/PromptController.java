@@ -52,6 +52,10 @@ public class PromptController {
       .call()
       .entity(TicketAnalysis.class);
 
+    if(ticketAnalysis == null){
+      return TicketAnalysisResponse.builder().build();
+    }
+
     TicketAnalysisResponse response = TicketAnalysisResponse.builder().ticketAnalysis(ticketAnalysis).build();
 
     List<TicketAnalysis.TicketPriority> bespokeResponseTrigger = List.of(TicketAnalysis.TicketPriority.HIGH, TicketAnalysis.TicketPriority.URGENT);

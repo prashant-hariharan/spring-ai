@@ -11,6 +11,9 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public final class PromptReaderUtil {
 
+  private PromptReaderUtil() {}
+
+
  public static String getPrompt(ResourceLoader resourceLoader,String path) {
    try {
      Resource resource = resourceLoader.getResource(path);

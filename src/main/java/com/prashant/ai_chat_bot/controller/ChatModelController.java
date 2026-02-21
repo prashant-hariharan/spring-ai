@@ -7,6 +7,7 @@ import com.prashant.ai_chat_bot.utils.InputSanitizer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
@@ -63,12 +64,13 @@ public class ChatModelController {
 
             ChatClient chatClient = multiModelProviderService.getChatClient(aiProvider);
 
-            ChatResponse chatResponse = chatClient.prompt().messages(messagesFromHistory).call().chatResponse();
+            ChatResponse chatResponse = chatClient.prompt().messages(messagesFromHistory)
+              .call().chatResponse();
 
             String content = Optional.ofNullable(chatResponse)
               .map(ChatResponse::getResult)
               .map(ModelResult::getOutput)
-              .map(Object::toString)
+              .map(AssistantMessage::getText)
               .filter(s -> !s.isBlank())
               .orElseThrow(() ->
                 new IllegalStateException("AI returned empty response"));

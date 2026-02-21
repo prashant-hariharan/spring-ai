@@ -32,11 +32,11 @@ import java.util.*;
 @Getter
 public class ConversationHistory {
 
-  private Integer conversationId;
+  private final Integer conversationId;
 
-  private List<TokenizedMessage> messages;
+  private final List<TokenizedMessage> messages;
 
-  private LocalDateTime createdAt;
+  private final LocalDateTime createdAt;
 
   private LocalDateTime updatedAt;
 
@@ -150,11 +150,11 @@ public class ConversationHistory {
 
     for (int i = messages.size() - 1; i >= 0; i--) {
       TokenizedMessage tm = messages.get(i);
-      if (currentTokens + tm.getTokenCount() > maxTokens) {
+      if (currentTokens + tm.tokenCount() > maxTokens) {
         break;
       }
-      buffer.addFirst(tm.getMessage());
-      currentTokens += tm.getTokenCount();
+      buffer.addFirst(tm.message());
+      currentTokens += tm.tokenCount();
     }
 
     return new ArrayList<>(buffer);

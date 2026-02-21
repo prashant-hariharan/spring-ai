@@ -46,3 +46,10 @@ spring:
         max-tokens: 500
         base-url: https://api.cohere.ai/compatibility/v1
         completion-path: /chat/completions
+      mistral:
+        api-key: ${MISTRAL_API_KEY:}
+        model: mistral-small-latest
+        temperature: 0.7
+        max-tokens: 500
+        base-url: https://api.mistral.ai/v1
+        completion-path: /chat/completions

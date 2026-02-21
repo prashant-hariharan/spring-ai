@@ -86,6 +86,17 @@ public class MultiModelConfig {
       .defaultSystem(systemPrompt)
       .build();
   }
+  @Bean(AIProviderConstants.MISTRAL)
+  public ChatClient mistralChatClient(AIProviderProperties properties) {
+    AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.COHERE);
+    Integer maxTokens = provider.getMaxTokens();
+    String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/mistral-system.txt", maxTokens);
+    return applyLoggingAdvisor(
+      ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.MISTRAL))
+    )
+      .defaultSystem(systemPrompt)
+      .build();
+  }
 
 
 

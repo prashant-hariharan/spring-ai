@@ -15,7 +15,7 @@ It includes:
 
 ## Prerequisites
 - JDK 17 installed
-- Internet access for cloud providers (OpenAI/Gemini/Groq/Cohere)
+- Internet access for cloud providers (OpenAI/Gemini/Groq/Cohere/Mistral)
 - Optional: Ollama running locally if you use provider `ollama`
 
 ## 1) Setup Environment Variables
@@ -26,6 +26,7 @@ Required/optional variables:
 - `GEMINI_API_KEY` (required if using Gemini)
 - `GROQ_API_KEY` (required if using Groq)
 - `COHERE_API_KEY` (required if using Cohere)
+- `MISTRAL_API_KEY` (required if using Mistral)
 - `OLLAMA_API_KEY` (optional, blank by default)
 
 ### Windows PowerShell (current terminal session)
@@ -34,6 +35,7 @@ $env:OPEN_API_KEY="your-openai-key"
 $env:GEMINI_API_KEY="your-gemini-key"
 $env:GROQ_API_KEY="your-groq-key"
 $env:COHERE_API_KEY="your-cohere-key"
+$env:MISTRAL_API_KEY="your-mistral-key"
 $env:OLLAMA_API_KEY=""
 ```
 
@@ -43,6 +45,7 @@ export OPEN_API_KEY="your-openai-key"
 export GEMINI_API_KEY="your-gemini-key"
 export GROQ_API_KEY="your-groq-key"
 export COHERE_API_KEY="your-cohere-key"
+export MISTRAL_API_KEY="your-mistral-key"
 export OLLAMA_API_KEY=""
 ```
 
@@ -57,6 +60,13 @@ spring:
         temperature: 0.7
         max-tokens: 500
         base-url: https://api.cohere.ai/compatibility/v1
+        completion-path: /chat/completions
+      mistral:
+        api-key: ${MISTRAL_API_KEY:}
+        model: mistral-small-latest
+        temperature: 0.7
+        max-tokens: 500
+        base-url: https://api.mistral.ai/v1
         completion-path: /chat/completions
 ```
 
@@ -108,7 +118,7 @@ Controller path: `/chatmodel`
 - URL: `http://localhost:8080/chatmodel/chat`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
 - Body type: `raw` -> `Text`
 - Example body:
 ```text
@@ -120,7 +130,7 @@ Give me 3 tips to optimize Java code readability.
 - URL (existing conversation): `http://localhost:8080/chatmodel/chat/conversation?conversationId=1001`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
 - Body type: `raw` -> `Text`
 - Example body:
 ```text
@@ -138,7 +148,7 @@ Controller path: `/chatmodel/streaming`
 - URL: `http://localhost:8080/chatmodel/streaming/chat`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
 - Body type: `raw` -> `Text`
 - Response: `text/event-stream`
 
@@ -147,7 +157,7 @@ Controller path: `/chatmodel/streaming`
 - URL (existing conversation): `http://localhost:8080/chatmodel/streaming/chat/conversation?conversationId=1001`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
 - Body type: `raw` -> `Text`
 - Response: `text/event-stream`
 
@@ -158,7 +168,7 @@ Controller path: `/prompts`
 - URL: `http://localhost:8080/prompts/analyze-code`
 - Headers:
   - `Content-Type: application/json`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
 - Body type: `raw` -> `JSON`
 - Example payload:
 ```json
@@ -186,7 +196,7 @@ curl -X POST "http://localhost:8080/prompts/analyze-code" \
 - URL: `http://localhost:8080/prompts/analyze-ticket`
 - Headers:
   - `Content-Type: text/plain`
-  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`)
+  - `ai-provider: ollama` (or `openai`, `gemini`, `groq`, `cohere`, `mistral`)
 - Body type: `raw` -> `Text`
 - Example body:
 ```text
@@ -211,7 +221,7 @@ Open in browser:
 - `http://localhost:8080/index.html`
 
 How to use:
-1. Select provider (`openai`, `gemini`, `ollama`, `groq`).
+1. Select provider (`openai`, `gemini`, `ollama`, `groq`, `cohere`, `mistral`).
 2. Optional: enter `Conversation ID` to continue existing chat.
 3. Enter message.
 4. Click `Start Streaming`.

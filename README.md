@@ -49,7 +49,7 @@ export MISTRAL_API_KEY="your-mistral-key"
 export OLLAMA_API_KEY=""
 ```
 
-Sample Cohere provider entry in `application.yml`:
+Sample AI provider entry in `application.yml`:
 ```yaml
 spring:
   ai:

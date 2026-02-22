@@ -91,7 +91,7 @@ Default app URL:
 - `http://localhost:8080`
 
 ## 3) API Quick Reference
-Use this section for fast lookup. For runnable requests, import the Postman collection in Section 6.
+Use this section for fast lookup. For runnable requests, import the Postman collection in [Section 6](#6-sample-postman-collection-import-json).
 
 Common provider header values:
 - `ai-provider: openai | gemini | ollama | groq | cohere | mistral`
@@ -106,9 +106,6 @@ Common provider header values:
 | `PromptController` - `POST /prompts/analyze-code` | `application/json` | `CodeReviewDTO` JSON | plain text | `.content` | Request fields: `language`, `code`, `businessRequirements` (optional). |
 | `PromptController` - `POST /prompts/analyze-ticket` | `text/plain` | ticket description text | `TicketAnalysisResponse` JSON | `.entity` | Returns `ticketAnalysis` + optional `bespokeResponses` when priority is `HIGH`/`URGENT`. |
 
-`/prompts/analyze-ticket` example bodies:
-- Normal case: `Customer reports checkout failure with payment timeout after entering card details.`
-- Urgent trigger case: `P0 INCIDENT: All customers are unable to complete checkout globally for the last 30 minutes. Revenue impact is critical, payment attempts are failing with timeout errors, and support volume is spiking. Immediate rollback/escalation required.`
 
 ## 4) UI Usage
 

@@ -473,9 +473,21 @@ Copy the JSON below into a file like `ai-chat-bot.postman_collection.json`, then
 }
 ```
 
-## 7) References
+## 7) Logging Configuration
+Enable AI/LLM logging in `application.yml`:
+
+```yaml
+app:
+  ai:
+    llm-logging:
+      enabled: true
+```
+
+When enabled, developers can inspect detailed prompt data being sent to the LLM, which helps during debugging and prompt tuning.
+
+## 8) References
 - Spring AI: https://spring.io/projects/spring-ai
 
-## 8) Credits
+## 9) Credits
 - Thanks to HungryCoders for the learning content and guidance:
   https://www.hungrycoders.com/course/ai-for-java-spring-boot-backend-engineers

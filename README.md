@@ -96,15 +96,15 @@ Use this section for fast lookup. For runnable requests, import the Postman coll
 Common provider header values:
 - `ai-provider: openai | gemini | ollama | groq | cohere | mistral`
 
-| Controller | Endpoint | Content-Type | Body | Response | Notes |
+| API (Controller + Endpoint) | Content-Type | Body | Response | Spring Ai Response Type | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `BasicChatController` | `POST /chatclient/chat` | `text/plain` | plain text message | plain text | No `ai-provider` header required. |
-| `ChatModelController` | `POST /chatmodel/chat` | `text/plain` | plain text message | plain text | Uses selected provider from header. |
-| `ChatModelController` | `POST /chatmodel/chat/conversation` | `text/plain` | plain text message | plain text | Optional query param: `conversationId=1001`. |
-| `StreamingChatModelController` | `POST /chatmodel/streaming/chat` | `text/plain` | plain text message | `text/event-stream` | Streaming response (SSE). |
-| `StreamingChatModelController` | `POST /chatmodel/streaming/chat/conversation` | `text/plain` | plain text message | `text/event-stream` | Optional query param: `conversationId=1001`. |
-| `PromptController` | `POST /prompts/analyze-code` | `application/json` | `CodeReviewDTO` JSON | plain text | Request fields: `language`, `code`, `businessRequirements` (optional). |
-| `PromptController` | `POST /prompts/analyze-ticket` | `text/plain` | ticket description text | `TicketAnalysisResponse` JSON | Returns `ticketAnalysis` + optional `bespokeResponses` when priority is `HIGH`/`URGENT`. |
+| `BasicChatController` - `POST /chatclient/chat` | `text/plain` | plain text message | plain text | `.content` | No `ai-provider` header required. |
+| `ChatModelController` - `POST /chatmodel/chat` | `text/plain` | plain text message | plain text | `.content` | Uses selected provider from header. |
+| `ChatModelController` - `POST /chatmodel/chat/conversation` | `text/plain` | plain text message | plain text | `.chatResponse` | Optional query param: `conversationId=1001`. |
+| `StreamingChatModelController` - `POST /chatmodel/streaming/chat` | `text/plain` | plain text message | `text/event-stream` | `.stream` | Streaming response (SSE). |
+| `StreamingChatModelController` - `POST /chatmodel/streaming/chat/conversation` | `text/plain` | plain text message | `text/event-stream` | `.stream` | Optional query param: `conversationId=1001`. |
+| `PromptController` - `POST /prompts/analyze-code` | `application/json` | `CodeReviewDTO` JSON | plain text | `.content` | Request fields: `language`, `code`, `businessRequirements` (optional). |
+| `PromptController` - `POST /prompts/analyze-ticket` | `text/plain` | ticket description text | `TicketAnalysisResponse` JSON | `.entity` | Returns `ticketAnalysis` + optional `bespokeResponses` when priority is `HIGH`/`URGENT`. |
 
 `/prompts/analyze-ticket` example bodies:
 - Normal case: `Customer reports checkout failure with payment timeout after entering card details.`

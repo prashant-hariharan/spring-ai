@@ -4,7 +4,6 @@ import com.prashant.ai_chat_bot.utils.PromptReaderUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
@@ -17,38 +16,38 @@ public class UserPromptService {
   private final ResourceLoader resourceLoader;
 
   public Prompt createCodeReviewPrompt(String language, String code, String businessRequirements) {
-    //read from code-review.txt and substitute language, code and business requirements
-
-      String prompt = PromptReaderUtil.getPrompt(resourceLoader,"classpath:/prompts/code-review.txt");
-      PromptTemplate promptTemplate = new PromptTemplate(prompt);
-      Map<String,Object> substitutionVariables = Map.of(
-        "language",language,
-        "code",code,
-        "businessRequirements",businessRequirements
-      );
-      return promptTemplate.create(substitutionVariables);
-
-
+    String prompt = PromptReaderUtil.getPrompt(resourceLoader, "classpath:/prompts/code-review.txt");
+    String renderedPrompt = applyPlaceholders(prompt, Map.of(
+      "language", language,
+      "code", code,
+      "businessRequirements", businessRequirements
+    ));
+    return new Prompt(renderedPrompt);
   }
 
   public Prompt createTicketAnalysisPrompt(String ticketText) {
-        String prompt = PromptReaderUtil.getPrompt(resourceLoader,"classpath:/prompts/ticket-analysis.txt");
-        PromptTemplate promptTemplate = new PromptTemplate(prompt);
-        Map<String,Object> substitutionVariables = Map.of(
-          "ticketText",ticketText
-        );
-        return promptTemplate.create(substitutionVariables);
-
-    }
+    String prompt = PromptReaderUtil.getPrompt(resourceLoader, "classpath:/prompts/ticket-analysis.txt");
+    String renderedPrompt = applyPlaceholders(prompt, Map.of(
+      "ticketText", ticketText
+    ));
+    return new Prompt(renderedPrompt);
+  }
 
   public Prompt createBespokeResponsePrompt(String category, String keyIssues) {
-    String prompt = PromptReaderUtil.getPrompt(resourceLoader,"classpath:/prompts/bespoke-responses.txt");
-    PromptTemplate promptTemplate = new PromptTemplate(prompt);
-    Map<String,Object> substitutionVariables = Map.of(
-      "category",category,
-      "issues",keyIssues
-    );
-    return promptTemplate.create(substitutionVariables);
+    String prompt = PromptReaderUtil.getPrompt(resourceLoader, "classpath:/prompts/bespoke-responses.txt");
+    String renderedPrompt = applyPlaceholders(prompt, Map.of(
+      "category", category,
+      "issues", keyIssues
+    ));
+    return new Prompt(renderedPrompt);
+  }
 
+  private String applyPlaceholders(String template, Map<String, Object> values) {
+    String rendered = template;
+    for (Map.Entry<String, Object> entry : values.entrySet()) {
+      String replacement = entry.getValue() == null ? "" : entry.getValue().toString();
+      rendered = rendered.replace("{" + entry.getKey() + "}", replacement);
+    }
+    return rendered;
   }
 }

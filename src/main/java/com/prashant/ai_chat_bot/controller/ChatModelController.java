@@ -65,6 +65,8 @@ public class ChatModelController {
 
             ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt()
               .user(messageInput)
+              //MessageChatMemoryAdvisor reads this param and uses it to decide which memory thread/history bucket to load and update for that request.
+              //Without it, the advisor falls back to its default conversation id
               .advisors(advisorSpec -> advisorSpec.param(CHAT_MEMORY_CONVERSATION_ID, String.valueOf(finalConversationId)));
             if (!defaultChatMemoryEnabled) {
                 requestSpec = requestSpec.advisors(

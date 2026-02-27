@@ -92,7 +92,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "Start a new conversation and explain Spring profiles."
+          "raw": "My Name is Prashant. How will you greet me?"
         },
         "url": {
           "raw": "{{baseUrl}}/chatmodel/chat/conversation",
@@ -123,10 +123,10 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "Continue from previous answer and add a code example."
+          "raw": "Continue from previous conversation, what is my name?."
         },
         "url": {
-          "raw": "{{baseUrl}}/chatmodel/chat/conversation?conversationId={{conversationId}}",
+          "raw": "{{baseUrl}}/chatmodel/chat/conversation?conversationId=1",
           "host": [
             "{{baseUrl}}"
           ],

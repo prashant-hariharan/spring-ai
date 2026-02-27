@@ -53,3 +53,6 @@ app:
   ai:
     llm-logging:
       enabled: false
+    chat-memory:
+      enabled: true
+      max-messages: 10

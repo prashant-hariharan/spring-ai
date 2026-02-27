@@ -1,32 +1,37 @@
 package com.prashant.ai_chat_bot.controller;
 
-import com.prashant.ai_chat_bot.service.ConversationService;
+import com.prashant.ai_chat_bot.service.ConversationIdGenerator;
 import com.prashant.ai_chat_bot.service.MultiModelProviderService;
 import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.InputSanitizer;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 @RequestMapping("/chatmodel/streaming")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class StreamingChatModelController {
 
+    private static final String CHAT_MEMORY_CONVERSATION_ID = "chat_memory_conversation_id";
     private final MultiModelProviderService multiModelProviderService;
-    private final ConversationService conversationService;
+    private final ConversationIdGenerator conversationIdGenerator;
+    private final ChatMemory chatMemory;
+    @Value("${app.ai.chat-memory.enabled:false}")
+    private boolean defaultChatMemoryEnabled;
 
     //text/event-stream: this is a SSE (Server Sent events) endpoint. Spring boot handles streaming internally
     @PostMapping(value= "/chat", produces = "text/event-stream")
@@ -60,25 +65,24 @@ public class StreamingChatModelController {
             }
 
             Integer finalConversationId = Optional.ofNullable(conversationId)
-              .orElseGet(conversationService::generateConversationId);
-
-            conversationService.addUserMessage(finalConversationId, sanitized);
-
-            List<Message> history =
-              conversationService.getRecentMessages(finalConversationId);
+              .orElseGet(conversationIdGenerator::nextId);
 
             ChatClient chatClient = Optional
               .ofNullable(multiModelProviderService.getChatClient(aiProvider))
               .orElseThrow(() ->
                 new IllegalArgumentException("Invalid AI provider: " + aiProvider));
 
+            ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt()
+              .user(sanitized)
+              .advisors(advisorSpec -> advisorSpec.param(CHAT_MEMORY_CONVERSATION_ID, String.valueOf(finalConversationId)));
+            if (!defaultChatMemoryEnabled) {
+                requestSpec = requestSpec.advisors(
+                  MessageChatMemoryAdvisor.builder(chatMemory)
+                    .conversationId(String.valueOf(finalConversationId))
+                    .build());
+            }
 
-            AtomicReference<String> lastMessage = new AtomicReference<>("");
-
-            return chatClient.prompt()
-              .messages(history)
-              .stream()
-              .chatResponse()
+            return requestSpec.stream().chatResponse()
 
               // Convert ChatResponse -> String (for frontend)
               .map(response -> {
@@ -88,29 +92,7 @@ public class StreamingChatModelController {
                     .map(AssistantMessage::getText)
                     .orElse("");
 
-                  if (!text.isEmpty()) {
-                      lastMessage.updateAndGet(prev -> prev + text);
-                  }
-
                   return text;
-
-              })
-
-              // Persist after stream completes
-              .doOnComplete(() -> {
-                  String finalContent = lastMessage.get();
-                  if (!finalContent.isBlank()) {
-                      conversationService.addAssistantMessage(
-                        finalConversationId,
-                        finalContent
-                      );
-                  }
-                  int totalInputToken =
-                    conversationService.getTokenCountForHistory(finalConversationId);
-
-                  log.info("Total input tokens part of next conversation: {}",
-                    totalInputToken);
-
 
               })
 

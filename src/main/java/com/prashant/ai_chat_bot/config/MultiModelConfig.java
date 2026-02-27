@@ -3,7 +3,11 @@ package com.prashant.ai_chat_bot.config;
 import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.PromptReaderUtil;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -14,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ResourceLoader;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Configuration
@@ -24,6 +30,12 @@ public class MultiModelConfig {
   @Value("${app.ai.llm-logging.enabled:false}")
   private boolean llmLoggingEnabled;
 
+  @Value("${app.ai.chat-memory.enabled:false}")
+  private boolean chatMemoryEnabled;
+
+  @Value("${app.ai.chat-memory.max-messages:10}")
+  private int chatMemoryMaxMessages;
+
   public MultiModelConfig(ResourceLoader resourceLoader) {
     this.resourceLoader = resourceLoader;
   }
@@ -32,70 +44,76 @@ public class MultiModelConfig {
   @Bean(AIProviderConstants.OPENAI)
   @Primary
   public ChatClient openAIChatClient(OpenAiChatModel openAiChatModel,
+      ChatMemory chatMemory,
       @Value("${spring.ai.openai.chat.options.max-tokens:0}") Integer openAiMaxTokens) {
     String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/openai-system.txt", openAiMaxTokens);
-    return applyLoggingAdvisor(ChatClient.builder(openAiChatModel))
+    return applyAdvisors(ChatClient.builder(openAiChatModel), chatMemory)
         .defaultSystem(systemPrompt)
         .build();
   }
 
   @Bean(AIProviderConstants.GEMINI)
-  public ChatClient geminiChatClient(AIProviderProperties properties) {
+  public ChatClient geminiChatClient(AIProviderProperties properties, ChatMemory chatMemory) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GEMINI);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/gemini-system.txt", maxTokens);
-    return applyLoggingAdvisor(
+    return applyAdvisors(
         ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GEMINI))
-      )
+      , chatMemory)
         .defaultSystem(systemPrompt)
         .build();
   }
 
   @Bean(AIProviderConstants.OLLAMA)
-  public ChatClient ollamaChatClient(AIProviderProperties properties) {
+  public ChatClient ollamaChatClient(AIProviderProperties properties, ChatMemory chatMemory) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.OLLAMA);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/ollama-system.txt", maxTokens);
-    return applyLoggingAdvisor(
+    return applyAdvisors(
         ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.OLLAMA))
-      )
+      , chatMemory)
         .defaultSystem(systemPrompt)
         .build();
   }
 
   @Bean(AIProviderConstants.GROQ)
-  public ChatClient groqChatClient(AIProviderProperties properties) {
+  public ChatClient groqChatClient(AIProviderProperties properties, ChatMemory chatMemory) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.GROQ);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/groq-system.txt", maxTokens);
-    return applyLoggingAdvisor(
+    return applyAdvisors(
         ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.GROQ))
-      )
+      , chatMemory)
       .defaultSystem(systemPrompt)
       .build();
   }
 
   @Bean(AIProviderConstants.COHERE)
-  public ChatClient deepseekChatClient(AIProviderProperties properties) {
+  public ChatClient deepseekChatClient(AIProviderProperties properties, ChatMemory chatMemory) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.COHERE);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/cohere-system.txt", maxTokens);
-    return applyLoggingAdvisor(
+    return applyAdvisors(
       ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.COHERE))
-    )
+    , chatMemory)
       .defaultSystem(systemPrompt)
       .build();
   }
   @Bean(AIProviderConstants.MISTRAL)
-  public ChatClient mistralChatClient(AIProviderProperties properties) {
+  public ChatClient mistralChatClient(AIProviderProperties properties, ChatMemory chatMemory) {
     AIProviderProperties.Provider provider = requireProvider(properties, AIProviderConstants.COHERE);
     Integer maxTokens = provider.getMaxTokens();
     String systemPrompt = loadSystemPrompt("classpath:prompts/system-prompts/mistral-system.txt", maxTokens);
-    return applyLoggingAdvisor(
+    return applyAdvisors(
       ChatClient.builder(createOpenAiCompatibleModel(properties, AIProviderConstants.MISTRAL))
-    )
+    , chatMemory)
       .defaultSystem(systemPrompt)
       .build();
+  }
+
+  @Bean
+  public ChatMemory chatMemory(){
+    return MessageWindowChatMemory.builder().maxMessages(chatMemoryMaxMessages).build();
   }
 
 
@@ -145,10 +163,18 @@ public class MultiModelConfig {
     return prompt;
   }
 
-  private ChatClient.Builder applyLoggingAdvisor(ChatClient.Builder builder) {
-    if (llmLoggingEnabled) {
-      return builder.defaultAdvisors(new SimpleLoggerAdvisor());
+  private ChatClient.Builder applyAdvisors(ChatClient.Builder builder, ChatMemory chatMemory) {
+    List<Advisor> advisors = new ArrayList<>();
+    if (chatMemoryEnabled) {
+      advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
     }
+    if (llmLoggingEnabled) {
+      advisors.add(new SimpleLoggerAdvisor());
+    }
+    if (!advisors.isEmpty()) {
+      return builder.defaultAdvisors(advisors);
+    }
+
     return builder;
   }
 }

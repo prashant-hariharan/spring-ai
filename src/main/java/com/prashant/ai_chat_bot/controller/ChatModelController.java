@@ -1,33 +1,38 @@
 package com.prashant.ai_chat_bot.controller;
 
-import com.prashant.ai_chat_bot.service.ConversationService;
+import com.prashant.ai_chat_bot.service.ConversationIdGenerator;
 import com.prashant.ai_chat_bot.service.MultiModelProviderService;
 import com.prashant.ai_chat_bot.utils.AIProviderConstants;
 import com.prashant.ai_chat_bot.utils.InputSanitizer;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.model.ModelResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/chatmodel")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class ChatModelController {
 
     public static final String AI_PROCESSING_FAILED = "AI processing failed";
+    private static final String CHAT_MEMORY_CONVERSATION_ID = "chat_memory_conversation_id";
     private final MultiModelProviderService multiModelProviderService;
-    private final ConversationService conversationService;
+    private final ConversationIdGenerator conversationIdGenerator;
+    private final ChatMemory chatMemory;
+    @Value("${app.ai.chat-memory.enabled:false}")
+    private boolean defaultChatMemoryEnabled;
 
     @PostMapping("/chat")
     public String chat(@RequestHeader(value= AIProviderConstants.AI_PROVIDER_HEADER, required = false,defaultValue = AIProviderConstants.OLLAMA) String aiProvider,
@@ -53,18 +58,22 @@ public class ChatModelController {
             }
             //create conversation id if it doesnt exist
             conversationId = Optional.ofNullable(conversationId)
-              .orElseGet(conversationService::generateConversationId);
-
-            //Add user message to conversation service
-            conversationService.addUserMessage(conversationId, messageInput);
-
-            //List of messages to be sent to LLM
-            List<Message> messagesFromHistory = conversationService.getRecentMessages(conversationId);
+              .orElseGet(conversationIdGenerator::nextId);
+            Integer finalConversationId = conversationId;
 
             ChatClient chatClient = multiModelProviderService.getChatClient(aiProvider);
 
-            ChatResponse chatResponse = chatClient.prompt().messages(messagesFromHistory)
-              .call().chatResponse();
+            ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt()
+              .user(messageInput)
+              .advisors(advisorSpec -> advisorSpec.param(CHAT_MEMORY_CONVERSATION_ID, String.valueOf(finalConversationId)));
+            if (!defaultChatMemoryEnabled) {
+                requestSpec = requestSpec.advisors(
+                  MessageChatMemoryAdvisor.builder(chatMemory)
+                    .conversationId(String.valueOf(finalConversationId))
+                    .build());
+            }
+
+            ChatResponse chatResponse = requestSpec.call().chatResponse();
 
             String content = Optional.ofNullable(chatResponse)
               .map(ChatResponse::getResult)
@@ -73,8 +82,6 @@ public class ChatModelController {
               .filter(s -> !s.isBlank())
               .orElseThrow(() ->
                 new IllegalStateException("AI returned empty response"));
-            //adds ai output to conversation
-            conversationService.addAssistantMessage(conversationId,content);
 
             int totalTokenCount = Optional.ofNullable(chatResponse)
               .map(ChatResponse::getMetadata)
@@ -82,11 +89,7 @@ public class ChatModelController {
               .map(Usage::getTotalTokens)
               .orElse(0);
 
-            int totalConsumedTokenInConversation = conversationService.updateTotalTokenCount(conversationId,totalTokenCount);
-            log.info("Total tokens consumed in conversation: {}",totalConsumedTokenInConversation);
-
-            int totalInputToken = conversationService.getTokenCountForHistory(conversationId);
-            log.info("Total input tokens part of next conversation: {}",totalInputToken);
+            log.info("Total tokens consumed for conversation {}: {}", finalConversationId, totalTokenCount);
 
             return ResponseEntity.ok(content);
         } catch (IllegalArgumentException e) {

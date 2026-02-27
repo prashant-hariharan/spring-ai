@@ -17,7 +17,7 @@ spring:
         api-key: ${GEMINI_API_KEY}
         model: gemini-2.5-flash
         temperature: 0.5
-        max-tokens: 750
+        max-tokens: 1000
         base-url: https://generativelanguage.googleapis.com/v1beta
         completion-path: /openai/chat/completions
       groq:

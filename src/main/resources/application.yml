@@ -29,7 +29,7 @@ spring:
         completion-path: /chat/completions
       ollama:
         api-key: ${OLLAMA_API_KEY:}
-        model: llama3.2:3b
+        model: qwen3:4b
         temperature: 0.5
         max-tokens: 500
         base-url: http://localhost:11434/v1
